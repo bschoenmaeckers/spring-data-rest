@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+import jdk.nashorn.internal.ir.IfNode;
+import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.core.CollectionFactory;
@@ -235,8 +238,12 @@ public class DomainObjectReader {
 			String fieldName = entry.getKey();
 
 			if (!mappedProperties.isWritableProperty(fieldName)) {
+				PropertyAccessor targetPropertyAccessor = PropertyAccessorFactory.forBeanPropertyAccess(target);
 
-				i.remove();
+				if (!targetPropertyAccessor.isWritableProperty(fieldName)) {
+					i.remove();
+				}
+
 				continue;
 			}
 

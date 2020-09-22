@@ -576,6 +576,22 @@ public class DomainObjectReaderUnitTests {
 		assertThat(result.email).isEqualTo("foo@bar.com");
 	}
 
+	@Test
+	public void useTransientSettersWithNonPersistentPropertiesForPatch() throws Exception {
+		SampleUser user = new SampleUser("name", "password");
+		user.lastLogin = new Date();
+		user.email = "foo@bar.com";
+		user.nonPersistentField = false;
+
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode source = (ObjectNode) mapper.readTree("{ \"online\" : true}");
+
+		@SuppressWarnings("deprecation")
+		SampleUser result = reader.merge(source, user, mapper);
+
+		assertThat(result.isOnline()).isTrue();
+	}
+
 	@Test // DATAREST-1068
 	public void arraysCanBeResizedDuringMerge() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
@@ -605,6 +621,22 @@ public class DomainObjectReaderUnitTests {
 
 		@ReadOnlyProperty //
 		private String email;
+
+		@Transient
+		@JsonIgnore
+		boolean nonPersistentField;
+
+		@Transient
+		@JsonProperty
+		public boolean isOnline() {
+			return nonPersistentField;
+		}
+
+		@Transient
+		@JsonProperty
+		public void setOnline(Boolean online) {
+				this.nonPersistentField = online;
+		}
 
 		public SampleUser(String name, String password) {
 
